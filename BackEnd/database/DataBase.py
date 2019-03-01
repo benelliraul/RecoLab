@@ -28,7 +28,7 @@ class Database():
 		
 		self.db=sqlite3.connect("database.db")
 		self.cursor =self.db.cursor()
-		print("conectado")
+		
 
 	def crear_tabla(self):
 		"""Crea la tabla "tiendas" si no existe, con cinco columnas """
@@ -115,7 +115,6 @@ class Database():
 		
 		self.cursor.close()
 		self.db.close()
-		print("desconectdo")
 
 	def extraer(self,id):
 		"""Extrae los datos de la tabla referentes al parámetro id, el cual debe recibir necesariamente,
