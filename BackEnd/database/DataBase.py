@@ -17,8 +17,8 @@ class Basedatos:
         self.cursor = self.db.cursor()
 
     def commit(self):
-        """Valida las transacciones realizadas en la base de datos, se ejecuta luego de 
-        realizar transacciones que modifiquen la base de datos"""
+        """Valida las transacciones realizadas en la base de datos, se ejecuta
+        luego de realizar transacciones que modifiquen la base de datos"""
 
         self.db.commit()
 
@@ -42,7 +42,8 @@ class Basedatos:
 									   contacto TEXT NOT NULL)''')
 
     def guardar_tienda(self, tienda):
-        """Recibe un objeto de la clase Tienda y permite insertar sus datos en la tabla tiendas."""
+        """Recibe un objeto de la clase Tienda y permite insertar sus datos en la 
+        tabla tiendas."""
 
         datos_tienda = [tienda.nombre_tienda, tienda.direccion_tienda,
 						tienda.categoria, tienda.imagen_portada_tienda,tienda.contacto]
@@ -54,13 +55,14 @@ class Basedatos:
 									(?,?,?,?,?);''', datos_tienda)
             self.commit()
             self.cerrar_conexion()
+            return "ok"
         except sqlite3.IntegrityError as error:
             return error 
 
     def modificar_datos_tienda(self, id_tienda, nombre_columna, datos_nuevos):
-        """Modifica los datos almacenados en la base de datos, correspondientes al id de la tienda,
-        necesariamente se deben pasar los tres parámetros requeridos, id de la tienda, nombre de
-        la columna a modificar y el dato nuevo."""
+        """Modifica los datos almacenados en la base de datos, correspondientes 
+        al id de la tienda, necesariamente se deben pasar los tres parámetros 
+        requeridos, id de la tienda, nombre denla columna a modificar y el dato nuevo."""
 
         try:
             self.conectar_base_datos()
@@ -68,6 +70,7 @@ class Basedatos:
 								.format(nombre_columna), (datos_nuevos, id_tienda))
             self.commit()
             self.cerrar_conexion()
+            return "ok"
         except sqlite3.IntegrityError as error:
             return (error)
 
@@ -77,7 +80,8 @@ class Basedatos:
 
         lista_tiendas = []
         for registro in tiendas:
-                objeto=Tienda(registro[1],registro[2],registro[3],registro[4],registro[5])
+                objeto=Tienda(registro[1],registro[2],registro[3],
+                            registro[4],registro[5])
                 lista_tiendas.append(objeto)
         return(lista_tiendas)
 
@@ -96,18 +100,23 @@ class Basedatos:
                                 lista_datos[4], lista_datos[5])
         return tienda_extraida
     
-    def extraer_n_tiendas(self,n):
-        """Devuelve una lista con n numero de objetos Tienda, seleccionadas al azar,
-        si el numero de tiendas en la base fuera menor que n se devuelven todas las tiendas"""
+    def extraer_n_tiendas_orden(self,n=10,orden='DESC'):
+        """Acepta dos parametros n y orden, n debe ser un numero, orden puede ser 'DESC'
+        (descendente),'ASC'(ascendente) o 'aleatorio', devuelve una lista de n objetos 
+        Tienda ordenada segun el parametro orden"""
 
         self.conectar_base_datos()
-        self.cursor.execute("SELECT * FROM tiendas ORDER BY random() LIMIT ?;",[n])
+        if orden == "aleatorio":
+            self.cursor.execute("SELECT * FROM tiendas ORDER BY random() LIMIT ?;",[n])
+        else:
+            self.cursor.execute("SELECT * FROM tiendas ORDER BY id {} LIMIT ?;".format(orden),[n])    
         tiendas = self.cursor.fetchall()
         self.cerrar_conexion()
         return self.devolver_lista_objetos(tiendas)
 		
     def extraer_todas_tiendas(self):
-        """Devuelve una lista de objetos de todas las tiendas almacenadas en la base de datos"""
+        """Devuelve una lista de objetos de todas las tiendas almacenadas en la base 
+        de datos"""
 
         self.conectar_base_datos()
         self.cursor.execute("SELECT * FROM tiendas")
@@ -116,14 +125,16 @@ class Basedatos:
         return self.devolver_lista_objetos(tiendas)  
 
     def borrar_tienda(self, id_tienda):
-        """Borra los datos almacenados en la base de datos, correspondientes al id de la tienda,
-        necesariamente se debe pasar el parámetro requerido id de la tienda a borrar"""
+        """Borra los datos almacenados en la base de datos, correspondientes al id de 
+        la tienda, necesariamente se debe pasar el parámetro requerido id de la tienda
+        a borrar"""
 
         try:
             self.conectar_base_datos()
             self.cursor.execute("DELETE FROM tiendas WHERE id = ?;", [id_tienda])
             self.commit()
             self.cerrar_conexion()
+            return "ok"
         except sqlite3.IntegrityError as error:
             return (error)
 
