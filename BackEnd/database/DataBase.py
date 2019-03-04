@@ -1,6 +1,7 @@
 import sqlite3
 from tienda import Tienda
 
+
 class Basedatos:
     """Permite conectar a base de datos, insertar, consultar, modificar y borrar registros."""
 
@@ -10,8 +11,7 @@ class Basedatos:
         self.crear_tabla()
 
     def conectar_base_datos(self):
-        """Establece conexión con el archivo por defecto "base_datos.db"
-		y crea el objeto cursor"""
+        """Establece conexión con el archivo "base_datos.db", crea el objeto cursor."""
 
         self.db = sqlite3.connect("base_datos.db")
         self.cursor = self.db.cursor()
@@ -30,7 +30,8 @@ class Basedatos:
 
     def crear_tabla(self):
         """Crea la tabla "tiendas" si no existe, con seis  columnas, la primera
-        reservada para clave primaria que se añade automaticamete """
+        reservada para clave primaria que se añade automaticamete, no admite dos
+        registros iguales para la columna "nombre" """
 
         self.conectar_base_datos()
         return self.cursor.execute('''CREATE TABLE IF NOT EXISTS tiendas (
@@ -55,14 +56,14 @@ class Basedatos:
 									(?,?,?,?,?);''', datos_tienda)
             self.commit()
             self.cerrar_conexion()
-            return "ok"
+            return True
         except sqlite3.IntegrityError as error:
             return error 
 
     def modificar_datos_tienda(self, id_tienda, nombre_columna, datos_nuevos):
         """Modifica los datos almacenados en la base de datos, correspondientes 
         al id de la tienda, necesariamente se deben pasar los tres parámetros 
-        requeridos, id de la tienda, nombre denla columna a modificar y el dato nuevo."""
+        requeridos, id de la tienda, nombre de la columna a modificar y el dato nuevo."""
 
         try:
             self.conectar_base_datos()
@@ -70,7 +71,7 @@ class Basedatos:
 								.format(nombre_columna), (datos_nuevos, id_tienda))
             self.commit()
             self.cerrar_conexion()
-            return "ok"
+            return True
         except sqlite3.IntegrityError as error:
             return (error)
 
@@ -85,10 +86,12 @@ class Basedatos:
                 lista_tiendas.append(objeto)
         return(lista_tiendas)
 
-    def extraer_tienda(self, id_tienda):
-        """Extrae los datos de la tabla referentes al parámetro id, el cual debe recibir 
-		necesariamente, retorna un objeto de clase Tienda generado a partir de los datos obtenidos, 
-        se puede almacenar en una variable que se debe asignar en la declaración
+    def extraer_tienda(self, id_tienda): #se podria hacer con el nombre
+        """Extrae los datos de la tabla referentes al parámetro id.
+        
+        El cual debe recibir necesariamente, retorna un objeto de clase Tienda 
+        generado a partir de los datos obtenidos, se puede almacenar en una variable 
+        que se debe asignar en la declaración
         Ej: tienda_recuperada=Basedatos.extraer_tienda(id)"""
 
         self.conectar_base_datos()
@@ -100,16 +103,22 @@ class Basedatos:
                                 lista_datos[4], lista_datos[5])
         return tienda_extraida
     
-    def extraer_n_tiendas_orden(self,n=10,orden='DESC'):
-        """Acepta dos parametros n y orden, n debe ser un numero, orden puede ser 'DESC'
-        (descendente),'ASC'(ascendente) o 'aleatorio', devuelve una lista de n objetos 
-        Tienda ordenada segun el parametro orden"""
+    def extraer_n_tiendas_orden(self,n=10,contiene ='',orden='DESC',columna=
+                                'nombre||direccion||categoria||contacto'):
+        """Devuelve 10 ultimas tiendas, puede buscar coincidencia en columnas y variar el orden.
+
+        Acepta parametros: n, orden, contiene y columna.El parametro n debe ser un
+        numero entero, orden puede ser 'DESC' (descendente),'ASC'(ascendente) o 
+        'aleatorio', devuelve una lista de n Tiendas ordenada segun el parametro 'orden' 
+        pudiendo filtrar resultados especificando el contenido a buscar en 'contiene' 
+        y el nombre de la 'columna', por defecto buscara en todas las columnas
+        """
 
         self.conectar_base_datos()
         if orden == "aleatorio":
-            self.cursor.execute("SELECT * FROM tiendas ORDER BY random() LIMIT ?;",[n])
+            self.cursor.execute("SELECT * FROM tiendas WHERE {} LIKE '%{}%' ORDER BY random() LIMIT ?;".format(columna,contiene),[n])
         else:
-            self.cursor.execute("SELECT * FROM tiendas ORDER BY id {} LIMIT ?;".format(orden),[n])    
+            self.cursor.execute("SELECT * FROM tiendas WHERE {} LIKE '%{}%' ORDER BY id {} LIMIT ?;".format(columna,contiene,orden),[n])    
         tiendas = self.cursor.fetchall()
         self.cerrar_conexion()
         return self.devolver_lista_objetos(tiendas)
@@ -134,7 +143,7 @@ class Basedatos:
             self.cursor.execute("DELETE FROM tiendas WHERE id = ?;", [id_tienda])
             self.commit()
             self.cerrar_conexion()
-            return "ok"
+            return True
         except sqlite3.IntegrityError as error:
             return (error)
 
